@@ -9,6 +9,7 @@ from .serializers import (AuthorsSerializer,
                           BooksSerializer,
                           PublishersSerializer,
                           UsersSerializer)
+from django.forms.models import model_to_dict
 
 
 class BooksViewset(viewsets.ModelViewSet):
@@ -35,7 +36,7 @@ class UsersViewset(viewsets.ModelViewSet):
 def excer1(request):
     """Write a Query using Django ORM to fetch all the books objects from your database."""
     ans1 = Books.objects.all()
-    return Response(ans1)
+    return Response(ans1.values())
 
 
 @api_view(['GET'])
@@ -66,9 +67,8 @@ def excer4(request):
     first name starts with A and popularity score is greater than or equal to 8.
     """
     ans4 = Authors.objects.all().filter(firstname__startswith='a',
-                                        popularity_score__gte=8)
-    ans4 = ans4.values_list('firstname',
-                            'popularity_score')
+                                        popularity_score__gte=8).values_list('firstname',
+                                                                             'popularity_score')
     return Response(ans4)
 
 
@@ -88,7 +88,7 @@ def excer6(request):
     Fetch list of all the authors whose ids are in the list = [1, 3, 23, 43, 134, 25].
     """
     ans6 = Authors.objects.all().filter(pk__in=[1, 3, 23, 43, 134, 25])
-    return Response(ans6)
+    return Response(ans6.values())
 
 
 @api_view(['GET'])
@@ -119,8 +119,8 @@ def excer9(request):
     """
     Get the signup date for the last joined Author and Publisher.
     """
-    ans9 = [Authors.objects.all().order_by('joindate').last(),
-            Publishers.objects.all().order_by('-joindate').first()]
+    ans9 = [Authors.objects.all().order_by('joindate').last().pk,
+            Publishers.objects.all().order_by('-joindate').first().pk]
     return Response(ans9)
 
 
@@ -142,7 +142,7 @@ def excer11(request):
     Fetch list of all authors who joined after or in year 2013
     """
     ans11 = Authors.objects.all().filter(joindate__year__gte=2013)
-    return Response(ans11)
+    return Response(ans11.values())
 
 
 @api_view(['GET'])
@@ -189,7 +189,8 @@ def excer15(request):
 @api_view(['GET'])
 def excer16(request):
     """
-    Produce list of all authors who published their book by publisher pk = 1, output list should be ordered by first name.
+    Produce list of all authors who published their book by publisher pk = 1,
+    output list should be ordered by first name.
     """
     ans16 = Authors.objects.all().filter(books__publisher__pk=1)
     return Response(ans16)
@@ -212,6 +213,7 @@ def excer18(request):
     """
     Set the followers list of the author with pk = 2, with only one user.
     """
+    user1 = Users.objects.filter(username='user1')
     ans18 = Authors.objects.get(pk=2).followers.set(user1)
     return Response(ans18)
 
@@ -221,8 +223,12 @@ def excer19(request):
     """
     Add new users in followers of the author with pk = 1.
     """
-    ans19 = Authors.objects.get(pk=1).followers.add(user1)
-    return Response(ans19)
+    user1 = Users.objects.create(username='user1', email='user1@test.com')
+    Authors.objects.get(pk=1).followers.add(user1)
+    author = Authors.objects.get(pk=1)
+    output = AuthorsSerializer(author).data
+    return Response(output)
+    # return Response(model_to_dict(ans19, exclude='followers'))
 
 
 @api_view(['GET'])
@@ -230,6 +236,7 @@ def excer20(request):
     """
     Remove one user from the followers of the author with pk = 1.
     """
+    user1 = Users.object.filter(username='user1')
     ans20 = Authors.objects.get(pk=1).followers.remove(user1)
     return Response(ans20)
 

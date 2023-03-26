@@ -22,7 +22,7 @@ class Authors(models.Model):
 
     def __str__(self):
         return self.firstname + ' ' + self.lastname
-
+    
 
 class Books(models.Model):
     title = models.CharField(max_length=100)
@@ -40,6 +40,7 @@ class Books(models.Model):
 
     def __str__(self):
         return self.title
+
 
 
 class Publishers(models.Model):
